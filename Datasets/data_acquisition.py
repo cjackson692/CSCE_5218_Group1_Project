@@ -1,5 +1,4 @@
 import requests
-import zipfile
 import os
 from io import BytesIO
 url = 'https://object.pouta.csc.fi/OPUS-OpenSubtitles/v2024/moses/en-tl.txt.zip'
@@ -13,3 +12,4 @@ with open(file, 'wb') as file:
         file.write(chunk)
 
 print(f"✅ Successfully downloaded '{file}'.")
+
