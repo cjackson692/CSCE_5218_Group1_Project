@@ -130,7 +130,7 @@ class DecoderLayer(nn.Module):
         out = self.mlp(out)
         return out + x
 
-
+## The actual model we ahould be able to use
 class Transformer(nn.Module):
     def __init__(self, num_layers, num_heads, num_kv_heads, hidden_dim,
                  max_seq_len, vocab_size_src, vocab_size_tgt, dropout=0.1):
