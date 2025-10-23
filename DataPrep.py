@@ -51,3 +51,12 @@ tl_padded = pad_sequences(tl_sequences, maxlen=max_tl_len, padding='post')
 
 print("English padded shape:", en_padded.shape)
 print("Tagalog padded shape:", tl_padded.shape)
+
+with open('en_tokenizer.pickle', 'wb') as handle:
+    pickle.dump(en_tokenizer, handle)
+with open('tl_tokenizer.pickle', 'wb') as handle:
+    pickle.dump(tl_tokenizer, handle)
+with open('en_padded.pickle', 'wb') as handle:
+    pickle.dump(en_padded, handle)
+with open('tl_padded.pickle', 'wb') as handle:
+    pickle.dump(tl_padded, handle)
