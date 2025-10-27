@@ -1,7 +1,7 @@
 import pandas as pd
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
-
+import re, unicodedata
 
 # Pull Data
 with open("OpenSubtitles.en-tl.en", encoding="utf-8") as f_en:
@@ -25,6 +25,35 @@ df = pd.DataFrame({
 
 # Drop null lines
 df = df[(df['english'].str.strip() != '') & (df['tagalog'].str.strip() != '')].dropna()
+
+def clean(data):
+    # Normalize unicode and punctutation
+    data = unicodedata.normalize("NFKC", data)
+    data = data.replace("—", "-").replace("–", "-").replace("？", "?")
+
+    # Remove unnecessary special characters and normalize whitespace
+    data = re.sub(r"[\x00-\x1F\x80-\x9F]", " ", data)
+    data = re.sub(r"[\u200b\u200e\u202a]", " ", data)
+    data = re.sub(r"[\u0370-\u03FF]", " ", data)
+    data = re.sub(r"[\u0900-\u097F]", " ", data)
+    data = re.sub(r"[\u0D80-\u0DFF]", " ", data)
+    data = re.sub(r"[\u0400-\u04FF]", " ", data)
+    data = re.sub(r"[\u4E00-\u9FFF]", " ", data)
+    data = re.sub(r"[¢£¤¥¦§©ª®¯°±²³¶¸º¼½¾‰♡♥♪♬✰€]+", " ", data)
+    data = re.sub(r"<[^>]+>", " ", data)
+    data = re.sub(r"\s+", " ", data).strip()
+
+    return data
+
+# Clean data
+len1 = len(df)
+df["english"] = df["english"].apply(clean)
+df["tagalog"] = df["tagalog"].apply(clean)
+
+# After cleaning, remove rows that are empty
+df = df[(df["english"] != "") & (df["tagalog"] != "")]
+len2 = len(df)
+print(f"Rows kept after cleaning: {len2}/{len1}")
 
 # Add SOS and EOS
 df['tagalog'] = df['tagalog'].apply(lambda x: f"<SOS> {x} <EOS>")
