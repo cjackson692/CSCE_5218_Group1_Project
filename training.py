@@ -1,36 +1,48 @@
-from sklearn.model_selection import train_test_split
-from torch.utils.data import TensorDataset, DataLoader
-import torch
-import torch.nn as nn
-import torch.optim as optim
-import torch.nn.functional as F
-import tqdm
-import random
-import pandas as pd
-import tensorflow
-from tensorflow.keras.preprocessing.text import Tokenizer
-from tensorflow.keras.preprocessing.sequence import pad_sequences
-import numpy as np
-import pickle
+UNK_TOKEN = "[UNK]"
+PAD_TOKEN = "[PAD]"
+SOS_TOKEN = "<SOS>" 
+EOS_TOKEN = "<EOS>" 
 
 
-with open('en_padded.pickle', 'rb') as f:
+with open('en_padded_bpe.pickle', 'rb') as f:
     en_padded = pickle.load(f)
 
-with open('tl_padded.pickle', 'rb') as f:
+with open('tl_padded_bpe.pickle', 'rb') as f:
     tl_padded = pickle.load(f)
 
-with open('en_tokenizer.pickle', 'rb') as f:
-    en_tokenizer = pickle.load(f)
+en_bpe_tokenizer_raw = Tokenizer.from_file('en_bpe_tokenizer.json')
+tl_bpe_tokenizer_raw = Tokenizer.from_file('tl_bpe_tokenizer.json')
 
-with open('tl_tokenizer.pickle', 'rb') as f:
-    tl_tokenizer = pickle.load(f)
+en_tokenizer = PreTrainedTokenizerFast(
+    tokenizer_object=en_bpe_tokenizer_raw, 
+    unk_token=UNK_TOKEN, 
+    pad_token=PAD_TOKEN, 
+    eos_token=EOS_TOKEN,
+    padding_side="right"
+)
+tl_tokenizer = PreTrainedTokenizerFast(
+    tokenizer_object=tl_bpe_tokenizer_raw, 
+    unk_token=UNK_TOKEN, 
+    pad_token=PAD_TOKEN, 
+    bos_token=SOS_TOKEN,
+    eos_token=EOS_TOKEN,
+    padding_side="right"
+)
 
 
-en_padded = np.load('en_padded.npy')
-tl_padded = np.load('tl_padded.npy')
+vocab_size_in = en_tokenizer.vocab_size
+vocab_size_out = tl_tokenizer.vocab_size
+pad_token_id = tl_tokenizer.pad_token_id # Get the padding ID from the tokenizer
+
+
+print(f"English Vocab Size: {vocab_size_in}")
+print(f"Tagalog Vocab Size: {vocab_size_out}")
+print(f"Padding Token ID: {pad_token_id}")
+
+
 max_en_len = en_padded.shape[1]
 max_tl_len = tl_padded.shape[1]
+
 
 source_train, source_test, target_train, target_test = train_test_split(
     en_padded,
@@ -52,11 +64,10 @@ target_test_tensor = torch.from_numpy(target_test).long()
 train_dataset = TensorDataset(source_train_tensor, target_train_tensor)
 test_dataset = TensorDataset(source_test_tensor, target_test_tensor)
 
-batch_size = 128
+batch_size = 256
 
 train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
-
 
 def rotate_half(x):
     x1, x2 = x.chunk(2, dim=-1)
@@ -118,24 +129,23 @@ class GQA(nn.Module):
         k_batch_size, k_seq_len, hidden_dim = k.shape
         v_batch_size, v_seq_len, hidden_dim = v.shape
 
-        # projection
+
         q = self.q_proj(q).view(q_batch_size, q_seq_len, -1, self.head_dim).transpose(1, 2)
         k = self.k_proj(k).view(k_batch_size, k_seq_len, -1, self.head_dim).transpose(1, 2)
         v = self.v_proj(v).view(v_batch_size, v_seq_len, -1, self.head_dim).transpose(1, 2)
 
-        # apply rotary positional encoding
+
         if rope:
             q = rope(q)
             k = rope(k)
 
-        # compute grouped query attention
         q = q.contiguous()
         k = k.contiguous()
         v = v.contiguous()
         output = F.scaled_dot_product_attention(q, k, v,
                                                 attn_mask=mask,
-                                                dropout_p=self.dropout,
-                                                enable_gqa=True)
+                                                dropout_p=self.dropout)
+                                                # enable_gqa=True) # Removed for broader compatibility
         output = output.transpose(1, 2).reshape(q_batch_size, q_seq_len, hidden_dim).contiguous()
         output = self.out_proj(output)
         return output
@@ -150,12 +160,12 @@ class EncoderLayer(nn.Module):
         self.norm2 = nn.RMSNorm(hidden_dim)
 
     def forward(self, x, mask=None, rope=None):
-        # self-attention sublayer
+
         out = x
         out = self.norm1(x)
         out = self.self_attn(out, out, out, mask, rope)
         x = out + x
-        # MLP sublayer
+
         out = self.norm2(x)
         out = self.mlp(out)
         return out + x
@@ -172,22 +182,20 @@ class DecoderLayer(nn.Module):
         self.norm3 = nn.RMSNorm(hidden_dim)
 
     def forward(self, x, enc_out, mask=None, rope=None):
-        # self-attention sublayer
+
         out = x
         out = self.norm1(out)
         out = self.self_attn(out, out, out, mask, rope)
         x = out + x
-        # cross-attention sublayer
+
         out = self.norm2(x)
         out = self.cross_attn(out, enc_out, enc_out, None, rope)
-        x = out + x
-        # MLP sublayer
         x = out + x
         out = self.norm3(x)
         out = self.mlp(out)
         return out + x
 
-## The actual model we ahould be able to use
+## The actual model we should be able to use
 class Transformer(nn.Module):
     def __init__(self, num_layers, num_heads, num_kv_heads, hidden_dim,
                  max_seq_len, vocab_size_src, vocab_size_tgt, dropout=0.1):
@@ -217,25 +225,25 @@ class Transformer(nn.Module):
 
 
 
-#Need to tune hyperparameters
+
 num_layers = 4
 num_heads = 8
 num_kv_heads = 4
 hidden_dim = 128
 max_seq_len = max(max_en_len, max_tl_len)
-vocab_size_in = len(en_tokenizer.word_index)+1
-vocab_size_out = len(tl_tokenizer.word_index)+1
 dropout = .2
 
-model = Transformer(num_layers, num_heads, num_kv_heads, hidden_dim, max_seq_len, vocab_size_in, vocab_size_out, dropout) # this is assuming we use the transformer class in the example_model.py script
+model = Transformer(num_layers, num_heads, num_kv_heads, hidden_dim, 
+                    max_seq_len, vocab_size_in, vocab_size_out, dropout)
 
-loss_fn = nn.CrossEntropyLoss(ignore_index = 0)
+
+loss_fn = nn.CrossEntropyLoss(ignore_index = pad_token_id)
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 model = model.to(device)
 
-n_epochs = 30
+n_epochs = 20
 lr = 5e-4
 n_warmup = 1000
 gradient_clip = 5.0
@@ -253,10 +261,9 @@ def create_padding_mask(batch, padding_token_id):
     batch_size, seq_len = batch.shape
     device = batch.device
     padded = torch.zeros_like(batch, device=device).float().masked_fill(batch == padding_token_id, float('-inf'))
+    
     mask = torch.zeros(batch_size, seq_len, seq_len, device=device) + padded[:,:,None] + padded[:,None,:]
     return mask[:, None, :, :]
-
-pad_token_id = 0
 
 train_losses = []
 test_losses = []
@@ -268,31 +275,50 @@ for epoch in range(n_epochs):
         source_lang = source_lang.to(device)
         target_lang = target_lang.to(device)
         src_mask = create_padding_mask(source_lang, pad_token_id)
-        tgt_mask = create_causal_mask(target_lang.shape[1], device).unsqueeze(0) + create_padding_mask(target_lang, pad_token_id)
+        causal_mask = create_causal_mask(target_lang.shape[1], device).unsqueeze(0)
+        padding_mask = create_padding_mask(target_lang, pad_token_id)
+        tgt_mask = causal_mask + padding_mask
+        
         optimizer.zero_grad()
+
         outputs = model(source_lang, target_lang, src_mask, tgt_mask)
-        loss = loss_fn(outputs[:, :-1, :].reshape(-1, outputs.shape[-1]), target_lang[:, 1:].reshape(-1))
+        
+        loss = loss_fn(outputs[:, :-1, :].reshape(-1, outputs.shape[-1]), 
+                       target_lang[:, 1:].reshape(-1))
+        
         loss.backward()
         if gradient_clip:
             torch.nn.utils.clip_grad_norm_(model.parameters(), gradient_clip, error_if_nonfinite=False)
         optimizer.step()
         scheduler.step()
         epoch_loss += loss.item()
+        
     print(f"Epoch {epoch+1}/{n_epochs}; Avg loss {epoch_loss/len(train_dataloader)}; Latest loss {loss.item()}")
     train_losses.append(epoch_loss/len(train_dataloader))
+    
     model.eval()
     epoch_loss = 0
     with torch.no_grad():
         for source_lang, target_lang in tqdm.tqdm(test_dataloader):
             source_lang = source_lang.to(device)
             target_lang = target_lang.to(device)
+            
             src_mask = create_padding_mask(source_lang, pad_token_id)
-            tgt_mask = create_causal_mask(target_lang.shape[1], device).unsqueeze(0) + create_padding_mask(target_lang, pad_token_id)
+            causal_mask = create_causal_mask(target_lang.shape[1], device).unsqueeze(0)
+            padding_mask = create_padding_mask(target_lang, pad_token_id)
+            tgt_mask = causal_mask + padding_mask
+            
             outputs = model(source_lang, target_lang, src_mask, tgt_mask)
-            loss = loss_fn(outputs[:, :-1, :].reshape(-1, outputs.shape[-1]), target_lang[:, 1:].reshape(-1))
+            
+            loss = loss_fn(outputs[:, :-1, :].reshape(-1, outputs.shape[-1]), 
+                           target_lang[:, 1:].reshape(-1))
+            
             epoch_loss += loss.item()
-    print(f"Eval loss: {epoch_loss/len(test_dataloader)}")
-    test_losses.append(epoch_loss/len(test_dataloader))
-    if epoch_loss < best_loss:
-        best_loss = epoch_loss
-        torch.save(model.state_dict(), "model_out.pth")
+            
+    eval_loss = epoch_loss/len(test_dataloader)
+    print(f"Eval loss: {eval_loss}")
+    test_losses.append(eval_loss)
+    
+    if eval_loss < best_loss:
+        best_loss = eval_loss
+        torch.save(model.state_dict(), "model_out_bpe.pth") 
