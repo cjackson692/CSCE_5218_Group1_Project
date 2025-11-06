@@ -2,12 +2,20 @@ import pandas as pd
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 import re, unicodedata
+import zipfile
+import os
+
+zip_file_path = 'Datasets/Cleaned Data.zip'
+extraction_directory = 'Datasets/Clean'
+os.makedirs(extraction_directory, exist_ok=True)
+with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
+    zip_ref.extractall(extraction_directory)
 
 # Pull Data
-with open("Datasets/clean.en-tl.en", encoding="utf-8") as f_en:
+with open("Datasets/Clean/clean.en-tl.en", encoding="utf-8") as f_en:
     en_sentences = [line.strip() for line in f_en]
 
-with open("Datasets/clean..en-tl.tl", encoding="utf-8") as f_tl:
+with open("Datasets/Clean/clean..en-tl.tl", encoding="utf-8") as f_tl:
     tl_sentences = [line.strip() for line in f_tl]
 
 # Ensures same number of lines
