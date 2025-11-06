@@ -4,10 +4,10 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 import re, unicodedata
 
 # Pull Data
-with open("OpenSubtitles.en-tl.en", encoding="utf-8") as f_en:
+with open("Datasets/clean.en-tl.en", encoding="utf-8") as f_en:
     en_sentences = [line.strip() for line in f_en]
 
-with open("OpenSubtitles.en-tl.tl", encoding="utf-8") as f_tl:
+with open("Datasets/clean..en-tl.tl", encoding="utf-8") as f_tl:
     tl_sentences = [line.strip() for line in f_tl]
 
 # Ensures same number of lines
@@ -69,6 +69,15 @@ tl_tokenizer.fit_on_texts(df['tagalog'])
 # Convert Sentence to integers
 en_sequences = en_tokenizer.texts_to_sequences(df['english'])
 tl_sequences = tl_tokenizer.texts_to_sequences(df['tagalog'])
+
+temp_A = []
+temp_B = []
+for seq_A, seq_B in zip(en_sequences, tl_sequences):
+    if len(seq_A) <= 50 and len(seq_B) <= 50:
+        temp_A.append(seq_A)
+        temp_B.append(seq_B)
+en_sequences = result_A[:100000]
+tl_sequences = result_B[:100000]
 
 # Find Max Lengths (used for padding)
 max_en_len = max(len(seq) for seq in en_sequences)
