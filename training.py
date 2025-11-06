@@ -74,7 +74,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model = model.to(device)
 
 n_epochs = 60
-lr = .4e-4
+lr = 5e-4
 n_warmup = 1000
 gradient_clip = 5.0
 best_loss = float('inf')
@@ -135,7 +135,8 @@ for epoch in range(n_epochs):
         best_loss = epoch_loss
         torch.save(model.state_dict(), "model_out.pth")
 
-    
+
+
 import matplotlib.pyplot as plt
 plt.plot(train_losses, label='Train Loss')
 plt.plot(test_losses, label='Test Loss')
