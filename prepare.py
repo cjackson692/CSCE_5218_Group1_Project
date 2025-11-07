@@ -79,26 +79,29 @@ df["tagalog"] = strip_punctuation_regex(df["tagalog"])
 # Add SOS and EOS
 df['tagalog'] = df['tagalog'].apply(lambda x: f"<sos> {x} <eos>")
 
+
+temp_A = []
+temp_B = []
+for seq_A, seq_B in zip(list(df["english"]), list(df["tagalog"])):
+    if len(seq_A) <= 50 and len(seq_B) <= 50:
+        temp_A.append(seq_A)
+        temp_B.append(seq_B)
+en_sentences = temp_A[:200000]
+tl_sentences= temp_B[:200000]
+
 # Tokenize each df
 en_tokenizer = Tokenizer(filters='', lower=True)
 tl_tokenizer = Tokenizer(filters='', lower=True)
 
 # Converts Word to integer mapping
-en_tokenizer.fit_on_texts(df['english'])
-tl_tokenizer.fit_on_texts(df['tagalog'])
+en_tokenizer.fit_on_texts(en_sentences)
+tl_tokenizer.fit_on_texts(tl_sentences)
 
 # Convert Sentence to integers
-en_sequences = en_tokenizer.texts_to_sequences(df['english'])
-tl_sequences = tl_tokenizer.texts_to_sequences(df['tagalog'])
+en_sequences = en_tokenizer.texts_to_sequences(en_sentences)
+tl_sequences = tl_tokenizer.texts_to_sequences(tl_sentences)
 
-temp_A = []
-temp_B = []
-for seq_A, seq_B in zip(en_sequences, tl_sequences):
-    if len(seq_A) <= 50 and len(seq_B) <= 50:
-        temp_A.append(seq_A)
-        temp_B.append(seq_B)
-en_sequences = temp_A[:100000]
-tl_sequences = temp_B[:100000]
+
 
 # Find Max Lengths (used for padding)
 max_en_len = max(len(seq) for seq in en_sequences)
