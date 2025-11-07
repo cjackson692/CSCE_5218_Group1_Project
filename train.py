@@ -50,20 +50,20 @@ target_test_tensor = torch.from_numpy(target_test).long()
 train_dataset = TensorDataset(source_train_tensor, target_train_tensor)
 test_dataset = TensorDataset(source_test_tensor, target_test_tensor)
 
-batch_size = 128
+batch_size = 1024
 
 train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
 #Need to tune hyperparameters
-num_layers = 4
-num_heads = 4
-num_kv_heads = 4
-hidden_dim = 64
-max_seq_len = max(max_en_len, max_tl_len)
+num_layers = 6
+num_heads = 16
+num_kv_heads = 16
+hidden_dim = 128
+max_seq_len = 768
 vocab_size_in = len(en_tokenizer.word_index)+1
 vocab_size_out = len(tl_tokenizer.word_index)+1
-dropout = .25
+dropout = .5
 
 model = Transformer(num_layers, num_heads, num_kv_heads, hidden_dim, max_seq_len, vocab_size_in, vocab_size_out, dropout) # this is assuming we use the transformer class in the example_model.py script
 
@@ -74,9 +74,9 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model = model.to(device)
 
 n_epochs = 60
-lr = 5e-4
-n_warmup = 1000
-gradient_clip = 5.0
+lr = 1e-3
+n_warmup = 5
+gradient_clip = 2.5
 best_loss = float('inf')
 optimizer = optim.AdamW(model.parameters(), lr=lr, weight_decay=1e-4)
 warmup_scheduler = optim.lr_scheduler.LinearLR(optimizer, start_factor=0.01, end_factor=1.0, total_iters=n_warmup)
@@ -114,8 +114,9 @@ for epoch in range(n_epochs):
         if gradient_clip:
             torch.nn.utils.clip_grad_norm_(model.parameters(), gradient_clip, error_if_nonfinite=False)
         optimizer.step()
-        scheduler.step()
         epoch_loss += loss.item()
+    scheduler.step()
+        
     print(f"Epoch {epoch+1}/{n_epochs}; Avg loss {epoch_loss/len(train_dataloader)}; Latest loss {loss.item()}")
     train_losses.append(epoch_loss/len(train_dataloader))
     model.eval()
@@ -136,6 +137,7 @@ for epoch in range(n_epochs):
         torch.save(model.state_dict(), "model_out.pth")
 
 
+model.load_state_dict(torch.load('model_out.pth', map_location=device))
 
 import matplotlib.pyplot as plt
 plt.plot(train_losses, label='Train Loss')
@@ -218,3 +220,4 @@ for element in samples:
   print(f"True Tagalog: {tl_tokenizer.sequences_to_texts([true_tl.tolist()])}")
   print(f"Predicted: {pred_tl}")
   print()
+
