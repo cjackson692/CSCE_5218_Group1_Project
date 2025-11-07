@@ -50,25 +50,25 @@ def translate_sentence(model, sentence, en_tokenizer, tl_tokenizer, device, max_
     for encoder in model.encoders:
         x = encoder(x, src_mask, model.rope)
     enc_out = x
+    with torch.no_grad():
+        start_token = torch.tensor([[1]]).to(device)
+        tl_ids = start_token.clone()
 
-    start_token = torch.tensor([[1]]).to(device)
-    tl_ids = start_token.clone()
+        for _ in range(max_len):
+            tgt_mask = (
+                create_causal_mask(tl_ids.shape[-1], device).unsqueeze(0)
+                + create_padding_mask(tl_ids, pad_token_id)
+            )
+            x = model.tgt_embedding(tl_ids)
+            for decoder in model.decoders:
+                x = decoder(x, enc_out, tgt_mask, model.rope)
 
-    for _ in range(max_len):
-        tgt_mask = (
-            create_causal_mask(tl_ids.shape[-1], device).unsqueeze(0)
-            + create_padding_mask(tl_ids, pad_token_id)
-        )
-        x = model.tgt_embedding(tl_ids)
-        for decoder in model.decoders:
-            x = decoder(x, enc_out, tgt_mask, model.rope)
+            outputs = model.out(x)
+            next_token = outputs.argmax(dim=-1)
+            tl_ids = torch.cat([tl_ids, next_token[:, -1:]], axis=-1)
 
-        outputs = model.out(x)
-        next_token = outputs.argmax(dim=-1)[:, -1:]
-        tl_ids = torch.cat([tl_ids, next_token], dim=-1)
-
-        if next_token.item() == 2: 
-            break
+            if tl_ids[0, -1] == 2:
+                break
 
     pred_tl = tl_tokenizer.sequences_to_texts([tl_ids[0].tolist()])[0]
     return pred_tl
@@ -104,21 +104,21 @@ def main():
     print("Interactive English → Tagalog translation.\nType 'quit' to exit.\n")
 
     while True:
-        sentence = input("Enter an English sentence: ").strip()
-        if sentence.lower() in {"quit", "exit"}:
-            print("Exiting translator.")
-            break
-        if not sentence:
-            continue
-
-        try:
-            translation = translate_sentence(
-                model, sentence, en_tokenizer, tl_tokenizer, device, max_seq_len, pad_token_id
-            )
-            print(f"🗣️ English: {sentence}")
-            print(f"🇵🇭 Tagalog Translation: {translation}\n")
-        except Exception as e:
-            print(f"⚠️ Error: {e}\n")
+            sentence = input("Enter an English sentence: ").strip()
+            if sentence.lower() in {"quit", "exit"}:
+                print("Exiting translator.")
+                break
+            if not sentence:
+                continue
+            #sentence = '<sos> ' + sentence + ' <eos>'
+            try:
+                translation = translate_sentence(
+                    model, sentence, en_tokenizer, tl_tokenizer, device, max_seq_len, pad_token_id
+                )
+                print(f"🗣️ English: {sentence}")
+                print(f"🇵🇭 Tagalog Translation: {translation}\n")
+            except Exception as e:
+                print(f"⚠️ Error: {e}\n")
 
 if __name__ == "__main__":
     main()
