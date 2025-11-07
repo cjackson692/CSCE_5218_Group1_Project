@@ -12,10 +12,10 @@ with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
     zip_ref.extractall(extraction_directory)
 
 # Pull Data
-with open("Datasets/Clean/clean.en-tl.en", encoding="utf-8") as f_en:
+with open("Datasets/Clean/Cleaned Data/clean.en-tl.en", encoding="utf-8") as f_en:
     en_sentences = [line.strip() for line in f_en]
 
-with open("Datasets/Clean/clean..en-tl.tl", encoding="utf-8") as f_tl:
+with open("Datasets/Clean/Cleaned Data/clean.en-tl.tl", encoding="utf-8") as f_tl:
     tl_sentences = [line.strip() for line in f_tl]
 
 # Ensures same number of lines
@@ -53,18 +53,31 @@ def clean(data):
 
     return data
 
+
+
 # Clean data
 len1 = len(df)
 df["english"] = df["english"].apply(clean)
 df["tagalog"] = df["tagalog"].apply(clean)
+
+
+
 
 # After cleaning, remove rows that are empty
 df = df[(df["english"] != "") & (df["tagalog"] != "")]
 len2 = len(df)
 print(f"Rows kept after cleaning: {len2}/{len1}")
 
+
+def strip_punctuation_regex(string_list):
+    cleaned_strings = [re.sub(r'[^\w\s]', '', s).lower() for s in list(string_list)]
+    return cleaned_strings
+
+df["english"] = strip_punctuation_regex(df["english"])
+df["tagalog"] = strip_punctuation_regex(df["tagalog"])
+
 # Add SOS and EOS
-df['tagalog'] = df['tagalog'].apply(lambda x: f"<SOS> {x} <EOS>")
+df['tagalog'] = df['tagalog'].apply(lambda x: f"<sos> {x} <eos>")
 
 # Tokenize each df
 en_tokenizer = Tokenizer(filters='', lower=True)
@@ -84,8 +97,8 @@ for seq_A, seq_B in zip(en_sequences, tl_sequences):
     if len(seq_A) <= 50 and len(seq_B) <= 50:
         temp_A.append(seq_A)
         temp_B.append(seq_B)
-en_sequences = result_A[:100000]
-tl_sequences = result_B[:100000]
+en_sequences = temp_A[:100000]
+tl_sequences = temp_B[:100000]
 
 # Find Max Lengths (used for padding)
 max_en_len = max(len(seq) for seq in en_sequences)
