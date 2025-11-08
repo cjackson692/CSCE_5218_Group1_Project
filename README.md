@@ -16,7 +16,7 @@ run train.py
   - our training time: 9hrs 30 min
 
 run evaluate.py
-  - dutilizes truths.pickle and preds.pickle to perform evaluation
+  - utilizes sources.pickle, truths.pickle, and preds.pickle to perform evaluation
 
 run demo.py
   - loads model
@@ -44,6 +44,7 @@ run demo.py
 ├── losscurves.png # visualization of train vs eval loss (NOTE: Predictions are basxed on model state at minimum eval loss (2.758135411204124))
 ├── pred.pickle # output prediction sentences for the entire test set
 ├── prepare.py # loads and preps data for training (see above)
+├── sources.pickle # source english sentences for testing, aligned with truths and preds
 ├── test_translations.txt # 5 example input/ouput/ground truth examples, for qualitative description
 ├── train.py # all logic to train and save appropriate output files (see above)
 └── truths.pickle # aligned ground truths with preds.pickle for evaluation
