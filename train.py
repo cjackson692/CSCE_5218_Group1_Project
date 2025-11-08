@@ -59,8 +59,8 @@ test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 num_layers = 6
 num_heads = 16
 num_kv_heads = 16
-hidden_dim = 128
-max_seq_len = 768
+hidden_dim = 256
+max_seq_len = 1024
 vocab_size_in = len(en_tokenizer.word_index)+1
 vocab_size_out = len(tl_tokenizer.word_index)+1
 dropout = .5
@@ -73,8 +73,8 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 model = model.to(device)
 
-n_epochs = 60
-lr = 1e-3
+n_epochs = 12
+lr = 5e-4
 n_warmup = 5
 gradient_clip = 2.5
 best_loss = float('inf')
@@ -135,89 +135,3 @@ for epoch in range(n_epochs):
     if epoch_loss < best_loss:
         best_loss = epoch_loss
         torch.save(model.state_dict(), "model_out.pth")
-
-
-model.load_state_dict(torch.load('model_out.pth', map_location=device))
-
-import matplotlib.pyplot as plt
-plt.plot(train_losses, label='Train Loss')
-plt.plot(test_losses, label='Test Loss')
-plt.xlabel('Epoch')
-plt.ylabel('Loss')
-plt.legend()
-plt.savefig('losscurves')
-
-truths = []
-preds = []
-for element in range(len(test_dataset)):
-  with torch.no_grad():
-      start_token = torch.tensor([1]).to(device)
-      en_ids, true_tl = test_dataset[element]
-
-      en_ids = en_ids.unsqueeze(0).to(device)
-      src_mask = create_padding_mask(en_ids, pad_token_id)
-      x = model.src_embedding(en_ids)
-      for encoder in model.encoders:
-          x = encoder(x, src_mask, model.rope)
-      enc_out = x
-      tl_ids = start_token.unsqueeze(0).to(device)
-      for _ in range(max_len):
-        tgt_mask = create_causal_mask(tl_ids.shape[0], device).unsqueeze(0) + create_padding_mask(tl_ids, pad_token_id)
-        x = model.tgt_embedding(tl_ids)
-        for decoder in model.decoders:
-          x = decoder(x, enc_out, tgt_mask, model.rope)
-        outputs = model.out(x)
-        outputs = outputs.argmax(dim=-1)
-        tl_ids = torch.cat([tl_ids, outputs[:, -1:]], axis=-1)
-        if tl_ids[0, -1] == 2:
-            break
-
-          # Decode the predicted IDs
-  pred_tl = tl_tokenizer.sequences_to_texts([tl_ids[0].tolist()])
-
-  truths.append(tl_tokenizer.sequences_to_texts([true_tl.tolist()]))
-  preds.append(pred_tl)
-
-
-with open('truths.pickle', 'wb') as pkl_file:
-    pickle.dump(truths, pkl_file)
-
-with open('preds.pickle', 'wb') as pkl_file:
-    pickle.dump(preds, pkl_file)
-
-torch.save(train_dataloader, 'train_dataloader.pt')
-torch.save(test_dataloader, 'test_dataloader.pt')
-
-model.eval()
-max_len = max_seq_len
-samples = random.sample(range(len(test_dataset)), 5)
-for element in samples:
-  with torch.no_grad():
-      start_token = torch.tensor([1]).to(device)
-      en_ids, true_tl = test_dataset[element]
-
-      en_ids = en_ids.unsqueeze(0).to(device)
-      src_mask = create_padding_mask(en_ids, pad_token_id)
-      x = model.src_embedding(en_ids)
-      for encoder in model.encoders:
-          x = encoder(x, src_mask, model.rope)
-      enc_out = x
-      tl_ids = start_token.unsqueeze(0).to(device)
-      for _ in range(max_len):
-        tgt_mask = create_causal_mask(tl_ids.shape[0], device).unsqueeze(0) + create_padding_mask(tl_ids, pad_token_id)
-        x = model.tgt_embedding(tl_ids)
-        for decoder in model.decoders:
-          x = decoder(x, enc_out, tgt_mask, model.rope)
-        outputs = model.out(x)
-        outputs = outputs.argmax(dim=-1)
-        tl_ids = torch.cat([tl_ids, outputs[:, -1:]], axis=-1)
-        if tl_ids[0, -1] == 2:
-            break
-
-          # Decode the predicted IDs
-  pred_tl = tl_tokenizer.sequences_to_texts([tl_ids[0].tolist()])
-  print(f"English: {en_tokenizer.sequences_to_texts([en_ids[0].tolist()])}")
-  print(f"True Tagalog: {tl_tokenizer.sequences_to_texts([true_tl.tolist()])}")
-  print(f"Predicted: {pred_tl}")
-  print()
-
