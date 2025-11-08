@@ -16,8 +16,9 @@ run train.py
   - our training time: 9hrs 30 min
 
 run evaluate.py
-  - doesn't do anything yet
+  - dutilizes truths.pickle and preds.pickle yo perform evaluation
 
 run demo.py
   - loads model
+  - if you don't want to train the model yourslef, download the pretrained state dict from here, the demo can load from the file: https://drive.google.com/file/d/1lyb5HHtMsnMCINKlYCfcKlYqx8dHLF8-/view?usp=sharing (fille too large for github)
   - creates a interactive CLI where you can type out a sequence, and get a tagalog translation
