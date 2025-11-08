@@ -4,6 +4,7 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 import re, unicodedata
 import zipfile
 import os
+import pickle
 
 zip_file_path = 'Datasets/Cleaned Data.zip'
 extraction_directory = 'Datasets/Clean'
@@ -86,8 +87,8 @@ for seq_A, seq_B in zip(list(df["english"]), list(df["tagalog"])):
     if len(seq_A) <= 50 and len(seq_B) <= 50:
         temp_A.append(seq_A)
         temp_B.append(seq_B)
-en_sentences = temp_A[:200000]
-tl_sentences= temp_B[:200000]
+en_sentences = temp_A[:500000]
+tl_sentences= temp_B[:500000]
 
 # Tokenize each df
 en_tokenizer = Tokenizer(filters='', lower=True)
