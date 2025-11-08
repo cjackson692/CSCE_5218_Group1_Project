@@ -52,4 +52,6 @@ run demo.py
 
 ## Notes
 - pr1 (bpe) is stale, was an experimetn in alternate encoding schemas
-- ![Display Loss Curves](losscurves.png)
+
+## Visualizations
+![Display Loss Curves](losscurves.png)
