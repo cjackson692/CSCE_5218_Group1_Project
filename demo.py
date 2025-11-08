@@ -21,8 +21,6 @@ import time
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
 def load_model(model_path, device, en_tokenizer, tl_tokenizer):
-    print("Loading model...")
-
     num_layers = 6
     num_heads = 16
     num_kv_heads = 16
@@ -39,7 +37,6 @@ def load_model(model_path, device, en_tokenizer, tl_tokenizer):
     model.to(device)
     model.eval()
 
-    print("Model loaded successfully.\n")
     return model
 
 def translate_sentence(model, sentence, en_tokenizer, tl_tokenizer, device, max_len, pad_token_id):
@@ -111,7 +108,7 @@ def main():
     pad_token_id = 0
     max_seq_len = 25
 
-    print("Interactive English → Tagalog translation.\nType 'quit' to exit.\n")
+    print("English → Tagalog translation.\nType 'quit' to exit.\n")
 
     while True:
             sentence = input("Enter an English sentence: ").strip().lower()
