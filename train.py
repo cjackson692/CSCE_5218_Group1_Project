@@ -83,16 +83,6 @@ warmup_scheduler = optim.lr_scheduler.LinearLR(optimizer, start_factor=0.01, end
 cosine_scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=n_epochs * len(train_dataloader) - n_warmup)
 scheduler = optim.lr_scheduler.SequentialLR(optimizer, schedulers=[warmup_scheduler, cosine_scheduler], milestones=[n_warmup])
 
-def create_causal_mask(seq_len, device):
-    mask = torch.triu(torch.full((seq_len, seq_len), float('-inf'), device=device), diagonal=1)
-    return mask
-
-def create_padding_mask(batch, padding_token_id):
-    batch_size, seq_len = batch.shape
-    device = batch.device
-    padded = torch.zeros_like(batch, device=device).float().masked_fill(batch == padding_token_id, float('-inf'))
-    mask = torch.zeros(batch_size, seq_len, seq_len, device=device) + padded[:,:,None] + padded[:,None,:]
-    return mask[:, None, :, :]
 
 pad_token_id = 0
 
@@ -222,3 +212,4 @@ for element in samples:
   print(f"True Tagalog: {tl_tokenizer.sequences_to_texts([true_tl.tolist()])}")
   print(f"Predicted: {pred_tl}")
   print()
+
