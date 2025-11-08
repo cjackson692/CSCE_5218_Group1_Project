@@ -157,3 +157,15 @@ class Transformer(nn.Module):
         for decoder in self.decoders:
             x = decoder(x, enc_out, tgt_mask, self.rope)
         return self.out(x)
+
+
+def create_causal_mask(seq_len, device):
+    mask = torch.triu(torch.full((seq_len, seq_len), float('-inf'), device=device), diagonal=1)
+    return mask
+
+def create_padding_mask(batch, padding_token_id):
+    batch_size, seq_len = batch.shape
+    device = batch.device
+    padded = torch.zeros_like(batch, device=device).float().masked_fill(batch == padding_token_id, float('-inf'))
+    mask = torch.zeros(batch_size, seq_len, seq_len, device=device) + padded[:,:,None] + padded[:,None,:]
+    return mask[:, None, :, :]
