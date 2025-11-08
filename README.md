@@ -32,11 +32,10 @@ run demo.py
     ├── README # corpus access information
     ├── data_acquisition.py # downloads the appropriate data from source
     └── en-tl.txt.zip # source data before english has been removed from the tagalog sentences (compressed for efficiency)
+
 ├── Testing_Experimentation # bin for any other files
-    ├── special_character_analysis.py
-    ├── prepare.py
-    ├── tain.bin
-    └── val.bin
+    └── special_character_analysis.py
+
 ├── README.md
 ├── TranslationModel.py # Contains the architecture for the translation model used 
 ├── demo.py # interactive translation for demonstration (see above)
