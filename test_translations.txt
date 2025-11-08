@@ -1,0 +1,19 @@
+English: ['come join us for dinner']
+True Tagalog: ['<sos> tara maghapunan tayo <eos>']
+Predicted: ['<sos> tara na <eos>']
+
+English: ['pam wasnt there']
+True Tagalog: ['<sos> wala si pam don <eos>']
+Predicted: ['<sos> wala si pam <eos>']
+
+English: ['she was nothing to these girls']
+True Tagalog: ['<sos> na wala silang pake sa kanya <eos>']
+Predicted: ['<sos> wala siyang alam <eos>']
+
+English: ['well i dont wanna be associated with me either']
+True Tagalog: ['<sos> ayaw ko ring maugnay sa akin <eos>']
+Predicted: ['<sos> ayaw ko ring sumama <eos>']
+
+English: ['jessie i cant find jennifer']
+True Tagalog: ['<sos> jessie di ko mahanap si jennifer <eos>']
+Predicted: ['<sos> hindi ko alam <eos>']
