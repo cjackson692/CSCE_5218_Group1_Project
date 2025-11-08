@@ -16,7 +16,7 @@ run train.py
   - our training time: 9hrs 30 min
 
 run evaluate.py
-  - dutilizes truths.pickle and preds.pickle yo perform evaluation
+  - dutilizes truths.pickle and preds.pickle to perform evaluation
 
 run demo.py
   - loads model
