@@ -13,6 +13,7 @@ run train.py
     - train and test dataloader
     - losscurves plot
   - prints five random example translations
+  - our training time: 9hrs 30 min
 
 run evaluate.py
   - doesn't do anything yet
