@@ -83,7 +83,8 @@ print(f"Empty or whitespace string lines: {len(empty)}\n")
 
 # Add SOS and EOS
 df['tagalog'] = df['tagalog'].apply(lambda x: f"<sos> {x} <eos>")
-
+empty_t = df["tagalog"].str.fullmatch(r"<sos>\s*<eos>")
+print(f"Rows that are only <sos> <eos>: {empty_t.sum()}")
 
 temp_A = []
 temp_B = []
