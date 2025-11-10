@@ -54,28 +54,32 @@ def clean(data):
 
     return data
 
-
-
 # Clean data
 len1 = len(df)
 df["english"] = df["english"].apply(clean)
 df["tagalog"] = df["tagalog"].apply(clean)
 
+def strip_punctuation_regex(series):
+    return (
+        series.astype(str)
+              .str.replace(r"[^\w\s]", " ", regex=True)  
+              .str.lower()
+              .str.replace(r"\s+", " ", regex=True)      
+              .str.strip()
+    )
 
-
+df["english"] = strip_punctuation_regex(df["english"])
+df["tagalog"] = strip_punctuation_regex(df["tagalog"])
 
 # After cleaning, remove rows that are empty
 df = df[(df["english"] != "") & (df["tagalog"] != "")]
 len2 = len(df)
 print(f"Rows kept after cleaning: {len2}/{len1}")
 
-
-def strip_punctuation_regex(string_list):
-    cleaned_strings = [re.sub(r'[^\w\s]', '', s).lower() for s in list(string_list)]
-    return cleaned_strings
-
-df["english"] = strip_punctuation_regex(df["english"])
-df["tagalog"] = strip_punctuation_regex(df["tagalog"])
+# Ensure empty and whitespace strings are removed
+df = df[(df["english"].str.len() > 0) & (df["tagalog"].str.len() > 0)]
+empty = df[(df["english"] == "") | (df["tagalog"] == "")]
+print(f"Empty or whitespace string lines: {len(empty)}\n")
 
 # Add SOS and EOS
 df['tagalog'] = df['tagalog'].apply(lambda x: f"<sos> {x} <eos>")
