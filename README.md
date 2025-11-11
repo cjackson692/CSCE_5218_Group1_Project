@@ -1,4 +1,5 @@
-# CSCE_5218_Group1_Project - English to Tagalog - NMT
+# Tagalog (Filipino)-English Machine Translation with Transformer-Based Attention
+Robert “Reagan” Stephens, Alexander Christie, Carter Smith, Joe Niu
 
 ## Full Pipeline
 
