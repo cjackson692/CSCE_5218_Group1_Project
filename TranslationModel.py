@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 def rotate_half(x):
     x1, x2 = x.chunk(2, dim=-1)
