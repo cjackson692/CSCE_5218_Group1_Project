@@ -41,12 +41,14 @@ run demo.py
 ├── TranslationModel.py # Contains the architecture for the translation model used 
 ├── demo.py # interactive translation for demonstration (see above)
 ├── englishremover.py # preprocessing example designed to eliminate majority english sentences that occur in the tl data. You do not need to run this for the pipeline, its outputs are already stored in Datasets/Clean Data.zip
+├── en_tokenizer.pickle # saved version of english tokenizer
 ├── evaluate.py # script to run evaluation metrics (see above)
 ├── losscurves.png # visualization of train vs eval loss (NOTE: Predictions are basxed on model state at minimum eval loss (2.758135411204124))
 ├── pred.pickle # output prediction sentences for the entire test set
 ├── prepare.py # loads and preps data for training (see above)
 ├── sources.pickle # source english sentences for testing, aligned with truths and preds
 ├── test_translations.txt # 5 example input/ouput/ground truth examples, for qualitative description
+├── tl_tokenizer.pickle # saved version of tagalog tokenizer
 ├── train.py # all logic to train and save appropriate output files (see above)
 └── truths.pickle # aligned ground truths with preds.pickle for evaluation
 
