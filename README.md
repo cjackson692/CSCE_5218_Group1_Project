@@ -11,7 +11,7 @@ run prepare.py
 run train.py
   - takes output of prepare.py, preps the data the rest of the way for training, trains model, and saves the following
     - model state_dict
-    - aligned prediction and truth files (as pickle files, they are lists of lists
+    - aligned prediction and truth files (as pickle files, they are lists of lists)
     - train and test dataloader
     - losscurves plot
   - prints five random example translations
@@ -57,7 +57,7 @@ run demo.py
 ```
 
 ## Notes
-- pr1 (bpe) is stale, was an experimetn in alternate encoding schemas
+- pr1 (bpe) is stale, was an experiment in alternate encoding schemas
 
 ## Visualizations
 ![Display Loss Curves](losscurves.png)
