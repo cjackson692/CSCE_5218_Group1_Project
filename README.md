@@ -6,6 +6,7 @@ Robert “Reagan” Stephens, Alexander Christie, Carter Smith, Joe Niu
 run prepare.py
   - takes data from 'Cleaned Data.zip'
   - tokenize, encode, crop, and save datasets and tokenizers to file
+  - you MUST run this before running train.py
 
 run train.py
   - takes output of prepare.py, preps the data the rest of the way for training, trains model, and saves the following
@@ -16,8 +17,9 @@ run train.py
   - prints five random example translations
   - our training time: 9hrs 30 min
 
-run BLEU.py and/or COMET.py
+for evaluation, run BLEU.py and/or COMET.py based on your preffered evaluation metric
   - utilizes sources.pickle, truths.pickle, and preds.pickle to perform evaluation
+  - you do not need to run full training to replicate evaluation based on our training output
 
 run demo.py
   - loads model
@@ -33,16 +35,15 @@ run demo.py
     ├── README # corpus access information
     ├── data_acquisition.py # downloads the appropriate data from source
     └── en-tl.txt.zip # source data before english has been removed from the tagalog sentences (compressed for efficiency)
-
 ├── Testing_Experimentation # bin for any other files
     └── special_character_analysis.py
-
+├── BLEU.py # script to run evaluation metrics (see above)
+├── COMET.py # script to run evaluation metrics (see above)
 ├── README.md
 ├── TranslationModel.py # Contains the architecture for the translation model used 
 ├── demo.py # interactive translation for demonstration (see above)
 ├── englishremover.py # preprocessing example designed to eliminate majority english sentences that occur in the tl data. You do not need to run this for the pipeline, its outputs are already stored in Datasets/Clean Data.zip
 ├── en_tokenizer.pickle # saved version of english tokenizer
-├── evaluate.py # script to run evaluation metrics (see above)
 ├── losscurves.png # visualization of train vs eval loss (NOTE: Predictions are basxed on model state at minimum eval loss (2.758135411204124))
 ├── pred.pickle # output prediction sentences for the entire test set
 ├── prepare.py # loads and preps data for training (see above)
