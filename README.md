@@ -25,6 +25,7 @@ run demo.py
   - loads model
   - if you don't want to train the model yourslef, download the pretrained state dict from here, the demo can load from the file: https://drive.google.com/file/d/1lyb5HHtMsnMCINKlYCfcKlYqx8dHLF8-/view?usp=sharing (fille too large for github)
   - creates a interactive CLI where you can type out a sequence, and get a tagalog translation
+  - If you want to recreate the demonstration without worrying about cloning this repo, or taking any other steps, please see this notebook, and follow all instruction there: https://colab.research.google.com/drive/1i7XIc-qzqyp8yBXztJ3adoh4AZp0u3RX?usp=sharing
 
 
 ## Repository description
