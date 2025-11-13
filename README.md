@@ -16,7 +16,7 @@ run train.py
   - prints five random example translations
   - our training time: 9hrs 30 min
 
-run evaluate.py
+run BLEU.py and/or COMET.py
   - utilizes sources.pickle, truths.pickle, and preds.pickle to perform evaluation
 
 run demo.py
